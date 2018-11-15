@@ -25,8 +25,8 @@ type AzureClient struct {
 			Snapshot time.Time
 		}
 		Returns struct {
-			BlobData []byte
-			Error    error
+			BlobReader io.ReadCloser
+			Error      error
 		}
 	}
 	UploadFromStreamCall struct {
@@ -68,11 +68,11 @@ func (a *AzureClient) ListBlobs(params storage.ListBlobsParameters) (storage.Blo
 	return a.ListBlobsCall.Returns.BlobListResponse, a.ListBlobsCall.Returns.Error
 }
 
-func (a *AzureClient) Get(blobName string, snapshot time.Time) ([]byte, error) {
+func (a *AzureClient) Get(blobName string, snapshot time.Time) (io.ReadCloser, error) {
 	a.GetCall.CallCount++
 	a.GetCall.Receives.BlobName = blobName
 	a.GetCall.Receives.Snapshot = snapshot
-	return a.GetCall.Returns.BlobData, a.GetCall.Returns.Error
+	return a.GetCall.Returns.BlobReader, a.GetCall.Returns.Error
 }
 
 func (a *AzureClient) UploadFromStream(blobName string, stream io.Reader) error {

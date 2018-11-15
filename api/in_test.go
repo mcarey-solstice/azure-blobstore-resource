@@ -1,6 +1,7 @@
 package api_test
 
 import (
+	"bytes"
 	"errors"
 	"io/ioutil"
 	"path/filepath"
@@ -36,7 +37,7 @@ var _ = Describe("In", func() {
 		)
 
 		BeforeEach(func() {
-			azureClient.GetCall.Returns.BlobData = []byte(`{"key": "value"}`)
+			azureClient.GetCall.Returns.BlobReader = ioutil.NopCloser(bytes.NewReader([]byte(`{"key": "value"}`)))
 			snapshot = time.Date(2017, time.January, 01, 01, 01, 01, 01, time.UTC)
 		})
 
@@ -62,7 +63,7 @@ var _ = Describe("In", func() {
 				})
 			})
 
-			Context("when it fails to write a file into the destination dir", func() {
+			Context("when it fails to create a file into the destination dir", func() {
 				It("returns an error", func() {
 					err := in.CopyBlobToDestination("/fake/dest/dir", "example.json", snapshot)
 					Expect(err).To(MatchError("open /fake/dest/dir/example.json: no such file or directory"))

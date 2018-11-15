@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/storage"
@@ -42,10 +41,10 @@ func (c Client) ListBlobs(params storage.ListBlobsParameters) (storage.BlobListR
 	return cnt.ListBlobs(params)
 }
 
-func (c Client) Get(blobName string, snapshot time.Time) ([]byte, error) {
+func (c Client) Get(blobName string, snapshot time.Time) (io.ReadCloser, error) {
 	client, err := storage.NewClient(c.storageAccountName, c.storageAccountKey, c.baseURL, storage.DefaultAPIVersion, true)
 	if err != nil {
-		return []byte{}, err
+		return nil, err
 	}
 
 	blobClient := client.GetBlobService()
@@ -55,17 +54,10 @@ func (c Client) Get(blobName string, snapshot time.Time) ([]byte, error) {
 		Snapshot: &snapshot,
 	})
 	if err != nil {
-		return []byte{}, err
+		return nil, err
 	}
 
-	defer blobReader.Close()
-
-	data, err := ioutil.ReadAll(blobReader)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	return data, nil
+	return blobReader, nil
 }
 
 func (c Client) UploadFromStream(blobName string, stream io.Reader) error {

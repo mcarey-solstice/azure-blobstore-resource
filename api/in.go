@@ -1,7 +1,7 @@
 package api
 
 import (
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"time"
@@ -18,12 +18,19 @@ func NewIn(azureClient azureClient) In {
 }
 
 func (i In) CopyBlobToDestination(destinationDir, blobName string, snapshot time.Time) error {
-	data, err := i.azureClient.Get(blobName, snapshot)
+	blobReader, err := i.azureClient.Get(blobName, snapshot)
 	if err != nil {
 		return err
 	}
+	defer blobReader.Close()
 
-	err = ioutil.WriteFile(filepath.Join(destinationDir, blobName), data, os.ModePerm)
+	file, err := os.Create(filepath.Join(destinationDir, blobName))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = io.Copy(file, blobReader)
 	if err != nil {
 		return err
 	}
